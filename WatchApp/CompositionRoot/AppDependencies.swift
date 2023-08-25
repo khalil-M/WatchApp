@@ -14,11 +14,24 @@ class AppDependencies {
     private init(){
         
     }
-//    private lazy var service: AppServiceProtocol = {
-//        return AppService()
-//    }()
-    
+
+    // dependecies
     static let shared = AppDependencies()
+    
+    private lazy var client: HTTPClient = {
+        return URLSessionHTTPClient(session: URLSession.shared)
+    }()
+    
+    private lazy var service: TheMDBApiServiceProtocol = {
+        let apiKey = "8290a6cd7f5454ee042badd9ac77160f"
+        return TheMDBApiService(baseURL: URL(string: "https://api.themoviedb.org/3/movie/")!, client: client, apiKey: apiKey)
+    }()
+    
+    private lazy var theMDBManager: TheMDBManagerProtocol = {
+        return TheMDBManager(service: service)
+    }()
+    
+
     
     public func setScene(_ scene: UIScene) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
@@ -28,27 +41,33 @@ class AppDependencies {
         window?.makeKeyAndVisible()
     }
     
+    // launch the application
+    public func start() {
+        setRootViewController(makeHomeViewController())
+    }
+    
+    // set the first root of the application
     public func setRootViewController(_ viewController: UIViewController) {
         window?.rootViewController = viewController
     }
     
+    // create makeHomeViewController
     func makeHomeViewController() -> UIViewController {
-//        let viewModel = HomeViewControllerViewModel(service: service)
-//        let router = SearchViewRouter()
-//        let viewController = HomeViewController(viewModel: viewModel, router: router)
-        let viewController = HomeViewController()
+        let viewModel = HomeViewControllerViewModel(manager: theMDBManager)
+        let router = HomeViewRouter()
+        let viewController = HomeViewController(viewModel: viewModel, router: router)
         let navigationController = UINavigationController(rootViewController: viewController)
         navigationController.title = "Home"
         navigationController.tabBarItem.image = UIImage(systemName: "house")
-        viewController.view.backgroundColor = .red
-//        router.navigationController = navigationController
+        router.navigationController = navigationController
         return navigationController
     }
     
-    
-//    func makeMovieDetailsViewController(for personName: String, lastName: String) -> UIViewController {
-//        let viewModel = DetailViewControllerViewModel(firstName: personName, lastName: lastName)
-//        let viewController = DetailViewController(viewModel: viewModel)
-//        return viewController
-//    }
+    // create DetailViewController
+    func makeMovieDetailsViewController(for movieId: Int) -> UIViewController {
+        let viewModel = MovieDetailsViewControllerViewModel(id: movieId, manager: theMDBManager)
+        let viewController = MovieDetailsViewController(viewModel: viewModel)
+        viewModel.delegate = viewController
+        return viewController
+    }
 }

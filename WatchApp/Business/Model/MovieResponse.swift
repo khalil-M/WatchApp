@@ -6,6 +6,15 @@
 //
 
 import Foundation
-struct MovieResponse: Codable {
+public struct MovieResponse: DTO {
     var results: [Movie]
+    
+    
+    public var description: String {
+        return """
+        ------------
+        results = \(results)
+        ------------
+        """
+    }
 }
